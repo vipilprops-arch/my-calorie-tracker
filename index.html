@@ -1,389 +1,221 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Дневник Питания</title>
-    <style>
-        :root{--primary-color:#20c997;--background-color:#f8f9fa;--card-color:#ffffff;--text-color:#212529;--secondary-text-color:#6c757d;--progress-bg-color:#e9ecef;--goal-red-color:#e74c3c}html,body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:0;background-color:var(--background-color);color:var(--text-color);-webkit-tap-highlight-color:transparent}.page{display:none;padding-bottom:90px}.page.active{display:block}.header{background:var(--card-color);padding:15px;padding-top:env(safe-area-inset-top);box-shadow:0 2px 4px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center}.date-selector{display:flex;align-items:center;font-size:1.1em;font-weight:600}.date-selector .arrow{font-size:1.5em;color:var(--secondary-text-color);cursor:pointer;padding:5px 10px}.header-icon{font-size:1.5em;cursor:pointer;color:var(--secondary-text-color)}.calorie-summary{background:var(--card-color);border-radius:20px;padding:20px;margin:15px;text-align:center}.calorie-circle-container{position:relative;width:180px;height:180px;margin:15px auto}.calorie-circle-svg{transform:rotate(-90deg);width:100%;height:100%}.progress-ring-bg{stroke:var(--progress-bg-color);fill:none;stroke-width:14}.progress-ring-fg{stroke:var(--primary-color);fill:none;stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .5s ease-out}.circle-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}.circle-text-remaining{font-size:2.2em;font-weight:700}.circle-text-label{font-size:.9em;color:var(--secondary-text-color)}.calorie-details{display:flex;justify-content:space-between;margin-top:10px}.detail-item{flex:1;text-align:center}.detail-item p{margin:0;font-size:1.2em;font-weight:600}.detail-item span{font-size:.8em;color:var(--secondary-text-color)}.detail-item p.eaten{color:var(--goal-red-color)}.detail-item p.burned{color:#0d6efd}.macros-summary{display:flex;justify-content:space-around;gap:10px;padding:0 15px}.macro{flex:1;background:var(--card-color);border-radius:12px;padding:12px}.macro-header{display:flex;align-items:center;font-size:.8em;margin-bottom:8px;color:var(--secondary-text-color)}.macro-header img{width:16px;height:16px;margin-right:5px}.macro-value{font-size:1.1em;font-weight:600;margin-bottom:8px}.progress-bar{background-color:var(--progress-bg-color);height:5px;border-radius:3px;overflow:hidden}.progress-bar-fill{height:100%;width:0;border-radius:3px;transition:width .5s}#carbs-progress .progress-bar-fill{background-color:#fd7e14}#protein-progress .progress-bar-fill{background-color:#dc3545}#fat-progress .progress-bar-fill{background-color:#ffc107}.meal-card{display:flex;align-items:center;background:var(--card-color);padding:15px;border-radius:16px;margin:15px;box-shadow:0 4px 15px rgba(100,100,100,.06)}.meal-card .icon{font-size:1.5em;margin-right:15px}.meal-card .details{flex-grow:1}.meal-card .details p{margin:0;font-weight:500}.meal-card .details span{font-size:.85em;color:var(--secondary-text-color)}.meal-card .action-btn{width:38px;height:38px;border-radius:50%;background-color:var(--primary-color);color:#fff;font-size:1.8em;border:none;cursor:pointer;line-height:38px;text-align:center}.bottom-nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;background-color:var(--card-color);box-shadow:0 -2px 10px rgba(0,0,0,.08);height:60px;padding-bottom:env(safe-area-inset-bottom);z-index:1000}.nav-item{flex:1;text-align:center;color:var(--secondary-text-color);cursor:pointer;padding-top:10px}.nav-item.active{color:var(--primary-color)}.nav-item svg{width:24px;height:24px}.nav-item div{font-size:.7em}.fab{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);width:64px;height:64px;background-color:var(--primary-color);border-radius:50%;display:flex;justify-content:center;align-items:center;color:#fff;font-size:2.5em;box-shadow:0 4px 15px rgba(0,0,0,.2);cursor:pointer;z-index:1001;border:4px solid var(--background-color)}.modal{display:none;position:fixed;z-index:2000;left:0;top:0;width:100%;height:100%;background-color:var(--background-color);flex-direction:column;animation:slideIn .3s ease-out}@keyframes slideIn{from{transform:translateY(100%)}to{transform:translateY(0)}}.modal-header{display:flex;justify-content:space-between;align-items:center;padding:15px}.modal-header .close-btn{font-size:2em;cursor:pointer;border:none;background:0 0}.modal-content{padding:0 15px;overflow-y:auto;flex-grow:1}#calendar-header{display:flex;justify-content:space-between;align-items:center;padding:10px;font-size:1.2em;font-weight:600}#calendar-grid,.weekdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;gap:5px}.weekdays div{font-size:.8em;color:var(--secondary-text-color)}#calendar-grid .day{padding:10px 0;border-radius:50%;cursor:pointer;position:relative}#calendar-grid .day.other-month{color:#ccc}#calendar-grid .day.today{font-weight:700;background-color:#eee}#calendar-grid .day.completed{border:2px solid var(--goal-red-color)}#calendar-grid .day.selected{background-color:var(--primary-color);color:#fff}.stats-tabs{display:flex;background:#e9ecef;border-radius:8px;padding:4px;margin:15px}.stats-tabs .tab{flex:1;text-align:center;padding:8px;border-radius:6px;cursor:pointer}.stats-tabs .tab.active{background:var(--card-color);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.1)}.stats-card{background:var(--card-color);border-radius:12px;padding:15px;margin:15px}.bar-chart-container{display:flex;justify-content:space-around;align-items:flex-end;height:150px;border-bottom:1px solid #eee;padding:10px 0}.bar-wrapper{flex:1;text-align:center}.bar{background-color:#ffc107;width:60%;margin:0 auto;border-top-left-radius:4px;border-top-right-radius:4px;transition:height .5s}.bar-label{font-size:.7em;color:var(--secondary-text-color);margin-top:4px}.avg-meal-summary{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:20px}.avg-meal-item{text-align:center}.avg-meal-item .icon{font-size:1.5em}.avg-meal-item p{margin:5px 0 0;font-weight:600}.avg-meal-item span{font-size:.8em;color:var(--secondary-text-color)}input,select{width:100%;padding:14px;margin-bottom:10px;border:1px solid #e0e0e0;border-radius:10px;font-size:1em;box-sizing:border-box;background:#fff}button.primary{background-color:var(--primary-color);color:#fff;padding:15px;border:none;border-radius:12px;cursor:pointer;width:100%;font-size:1.1em;font-weight:600}.file-upload-wrapper{position:relative;overflow:hidden;display:inline-block;width:100%;padding:14px;margin-bottom:10px;border-radius:10px;background:var(--primary-color);color:#fff;text-align:center;cursor:pointer}.file-upload-wrapper input[type=file]{font-size:100px;position:absolute;left:0;top:0;opacity:0;cursor:pointer}#search-results button{background-color:#f0f0f0;color:#333;margin-bottom:5px;text-align:left}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nutrilio Clone - Calorie Tracker</title>
+<style>
+    body { margin:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f7f7f7; }
+    header { text-align:center; padding:20px; background:#1abc9c; color:white; font-size:1.8em; font-weight:bold; }
+    main { display:flex; flex-direction:column; align-items:center; padding:10px; }
+
+    /* Central circle */
+    .circle-container { position:relative; width:250px; height:250px; margin:20px 0; }
+    .circle-bg { width:100%; height:100%; border-radius:50%; background:#eee; position:absolute; top:0; left:0; }
+    .circle-progress { width:100%; height:100%; border-radius:50%; clip: rect(0px, 250px, 250px, 125px); position:absolute; top:0; left:0; }
+    .circle-progress .fill { background: conic-gradient(#3498db 0%, #2ecc71 0%, #e74c3c 0%, #eee 0%); width:100%; height:100%; border-radius:50%; transform:rotate(0deg); }
+    .circle-text { position:absolute; width:100%; height:100%; display:flex; justify-content:center; align-items:center; flex-direction:column; font-weight:bold; font-size:1em; text-align:center; }
+
+    /* Meal cards */
+    .meal-card { background:white; width:90%; max-width:400px; border-radius:15px; padding:15px; margin:10px 0; box-shadow:0 4px 6px rgba(0,0,0,0.1); }
+    .meal-card h3 { margin:0 0 10px 0; font-size:1.2em; }
+    .meal-list li { margin:5px 0; font-size:0.9em; }
+    .meal-progress { height:8px; border-radius:4px; margin-top:5px; background:#eee; overflow:hidden; }
+    .meal-progress div { height:100%; }
+
+    /* Tabs */
+    nav { display:flex; justify-content:center; margin:10px 0; flex-wrap:wrap; }
+    nav button { padding:10px 15px; margin:5px; border:none; border-radius:8px; background:#bdc3c7; color:white; font-weight:bold; cursor:pointer; }
+    nav button.active { background:#1abc9c; }
+
+    .tab { display:none; width:100%; max-width:500px; }
+    .tab.active { display:block; }
+
+    /* Inputs */
+    input, select, button { margin:5px 0; padding:10px; border-radius:8px; border:1px solid #ccc; width:100%; box-sizing:border-box; }
+    button { background:#1abc9c; color:white; border:none; font-weight:bold; cursor:pointer; }
+
+    /* Week view */
+    .week-day { background:white; padding:10px; border-radius:10px; margin:5px 0; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+    .week-day h4 { margin:0 0 5px 0; }
+    .week-progress { height:6px; border-radius:3px; background:#eee; overflow:hidden; }
+    .week-progress div { height:100%; }
+
+</style>
 </head>
 <body>
-    <!-- PAGE 1: Дневник -->
-    <div id="diaryPage" class="page active">
-        <div class="header">
-            <span class="header-icon" onclick="openCalendarModal()">🗓️</span>
-            <div class="date-selector">
-                <span class="arrow" onclick="changeDate(-1)">&lt;</span>
-                <span id="current-date"></span>
-                <span class="arrow" onclick="changeDate(1)">&gt;</span>
-            </div>
-            <span class="header-icon" style="visibility: hidden;">👑</span>
-        </div>
-        <div id="diary-content"></div>
-    </div>
-    
-    <!-- PAGE 2: Статистика -->
-    <div id="statsPage" class="page">
-        <div class="header" style="justify-content: center;"><div class="date-selector">Статистика</div></div>
-        <div class="stats-tabs">
-            <div class="tab" onclick="renderStats(7, this)">7 дн.</div>
-            <div class="tab" onclick="renderStats(30, this)">30 дн.</div>
-            <div class="tab" onclick="renderStats(90, this)">90 дн.</div>
-        </div>
-        <div id="stats-content"></div>
-    </div>
+<header>Nutrilio Clone</header>
+<nav>
+    <button class="tab-btn active" data-tab="today">Сегодня</button>
+    <button class="tab-btn" data-tab="week">Неделя</button>
+    <button class="tab-btn" data-tab="add">Добавить</button>
+    <button class="tab-btn" data-tab="settings">API Настройки</button>
+</nav>
+<main>
 
-    <!-- PAGE 3: Больше/Настройки -->
-    <div id="settingsPage" class="page">
-        <div class="header" style="justify-content: center;"><div class="date-selector">Настройки</div></div>
-        <div style="padding: 15px;">
-            <div class="meal-card" style="flex-direction: column; align-items: normal;">
-                <p style="font-weight: 500;">Цели по калориям и БЖУ</p>
-                <input type="number" id="goal-calories-input" placeholder="Цель калорий (ккал)">
-                <input type="number" id="goal-carbs-input" placeholder="Цель углеводы (г)">
-                <input type="number" id="goal-protein-input" placeholder="Цель белки (г)">
-                <input type="number" id="goal-fat-input" placeholder="Цель жиры (г)">
-            </div>
-            <div class="meal-card" style="flex-direction: column; align-items: normal;">
-                <p style="font-weight: 500;">API Edamam (Поиск по названию)</p>
-                <input type="text" id="edamam-id-input" placeholder="Edamam Application ID">
-                <input type="text" id="edamam-key-input" placeholder="Edamam Application Key">
-            </div>
-            <div class="meal-card" style="flex-direction: column; align-items: normal;">
-                <p style="font-weight: 500;">API Clarifai (Распознавание по фото)</p>
-                <input type="text" id="food-api-key-input" placeholder="Clarifai PAT ключ">
-            </div>
-            <button class="primary" onclick="saveSettings()">Сохранить</button>
-        </div>
-    </div>
-    
-    <!-- Нижняя навигация и FAB -->
-    <div class="fab" onclick="openFoodModal(null)">+</div>
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="showPage('diaryPage')"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM8 17H4v-5h4v5zm6 0h-4v-5h4v5zm6 0h-4v-5h4v5zM8 10H4V5h4v5zm6 0h-4V5h4v5zm6 0h-4V5h4v5z"/></svg><div>Дневник</div></div>
-        <div class="nav-item" onclick="showPage('statsPage')"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M4 9h4v11H4zM10 9h4v11h-4zM16 9h4v11h-4z"/></svg><div>Статистика</div></div>
-        <div class="nav-item" onclick="showPage('settingsPage')"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg><div>Больше</div></div>
-    </div>
-    
-    <!-- Модальное окно Добавления Еды -->
-    <div id="addFoodModal" class="modal">
-        <div class="modal-header">
-            <h2 id="modal-title">Добавить запись</h2>
-            <button class="close-btn" onclick="closeFoodModal()">&times;</button>
-        </div>
-        <div class="modal-content">
-            <select id="meal-type-select">
-                <option value="breakfast">Завтрак</option><option value="lunch">Обед</option><option value="dinner">Ужин</option><option value="snacks">Перекус</option>
-            </select><hr>
-            <div class="file-upload-wrapper">
-                <span>📷 Распознать еду по фото</span>
-                <input type="file" id="photo-upload" accept="image/*" onchange="recognizeFoodByImage(this)">
-            </div>
-            <p style="text-align:center; color: var(--secondary-text-color); margin: 15px;">- или -</p>
-            <input type="search" id="search-food-input" placeholder="Поиск продукта по названию..."><button class="primary" onclick="originalSearchFoodByText()">Найти</button>
-            <div id="search-results" style="margin: 15px 0;"></div><hr>
-            <input type="text" id="manual-name" placeholder="Название">
-            <div id="weight-calculator" style="display: none;">
-                <label for="manual-weight" style="font-size: 0.9em; color: var(--secondary-text-color);">Вес (граммы)</label>
-                <input type="number" id="manual-weight" value="100" oninput="recalculateNutrients()">
-            </div>
-            <input type="number" id="manual-calories" placeholder="Калории">
-            <input type="number" id="manual-protein" placeholder="Белки (г)">
-            <input type="number" id="manual-fat" placeholder="Жиры (г)">
-            <input type="number" id="manual-carbs" placeholder="Углеводы (г)">
-            <button class="primary" onclick="addFoodEntry()">Добавить</button>
+<!-- Сегодня -->
+<div id="today" class="tab active">
+    <div class="circle-container">
+        <div class="circle-bg"></div>
+        <div class="circle-progress"><div id="circleFill" class="fill"></div></div>
+        <div class="circle-text">
+            <span id="caloriesText">0 / 2000 kcal</span>
+            <small>Б:0 Ж:0 У:0</small>
         </div>
     </div>
 
-    <!-- Модальное окно Календаря -->
-    <div id="calendarModal" class="modal">
-        <div class="modal-header">
-            <h2 id="calendar-title">Календарь</h2>
-            <button class="close-btn" onclick="closeCalendarModal()">&times;</button>
-        </div>
-        <div class="modal-content">
-            <div id="calendar-header">
-                <span class="arrow" onclick="changeCalendarMonth(-1)">&lt;</span>
-                <span id="month-year-display"></span>
-                <span class="arrow" onclick="changeCalendarMonth(1)">&gt;</span>
-            </div>
-            <div class="weekdays"><div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div></div>
-            <div id="calendar-grid"></div>
-        </div>
+    <div class="meal-card" id="breakfast">
+        <h3>Завтрак</h3>
+        <ul class="meal-list"></ul>
+        <div class="meal-progress"><div class="fill" id="breakfastProgress" style="background:#3498db;width:0%"></div></div>
+        <button onclick="addMeal('breakfast')">Добавить</button>
     </div>
-    
-    <script>
-        let selectedDate = new Date();
-        let calendarDate = new Date();
-        let baseNutrients = { calories: 0, protein: 0, fat: 0, carbs: 0 };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadSettings();
-            showPage('diaryPage');
-            changeDate(0);
-        });
+    <div class="meal-card" id="lunch">
+        <h3>Обед</h3>
+        <ul class="meal-list"></ul>
+        <div class="meal-progress"><div class="fill" id="lunchProgress" style="background:#2ecc71;width:0%"></div></div>
+        <button onclick="addMeal('lunch')">Добавить</button>
+    </div>
 
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            const activeNavItem = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick') === `showPage('${pageId}')`);
-            if(activeNavItem) activeNavItem.classList.add('active');
-            
-            if (pageId === 'statsPage') {
-                const firstTab = document.querySelector('.stats-tabs .tab');
-                if(firstTab) renderStats(7, firstTab);
-            }
-        }
-        
-        function changeDate(days) {
-            selectedDate.setDate(selectedDate.getDate() + days);
-            const today = new Date();
-            const isToday = selectedDate.toDateString() === today.toDateString();
-            document.getElementById('current-date').textContent = isToday ? 'Сегодня' : selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
-            renderDiary();
-        }
+    <div class="meal-card" id="dinner">
+        <h3>Ужин</h3>
+        <ul class="meal-list"></ul>
+        <div class="meal-progress"><div class="fill" id="dinnerProgress" style="background:#e74c3c;width:0%"></div></div>
+        <button onclick="addMeal('dinner')">Добавить</button>
+    </div>
 
-        function renderDiary() {
-            const dateKey = selectedDate.toISOString().split('T')[0];
-            const data = loadDataForDate(dateKey);
-            const content = document.getElementById('diary-content');
-            
-            content.innerHTML = `
-                <div class="calorie-summary" id="calorie-summary"></div>
-                <div class="macros-summary" id="macros-summary"></div>
-                ${createMealCard('breakfast', 'Завтрак', '🍞', data.food || [])}
-                ${createMealCard('lunch', 'Обед', '🍲', data.food || [])}
-                ${createMealCard('dinner', 'Ужин', '🌙', data.food || [])}
-                ${createMealCard('snacks', 'Перекус', '🍏', data.food || [])}
-            `;
-            updateSummary();
-        }
+    <div class="meal-card" id="snacks">
+        <h3>Перекусы</h3>
+        <ul class="meal-list"></ul>
+        <div class="meal-progress"><div class="fill" id="snacksProgress" style="background:#f1c40f;width:0%"></div></div>
+        <button onclick="addMeal('snacks')">Добавить</button>
+    </div>
+</div>
 
-        function updateSummary() {
-            const dateKey = selectedDate.toISOString().split('T')[0];
-            const data = loadDataForDate(dateKey);
-            const settings = loadSettings();
-            
-            const food = data.food || [];
-            const eaten = food.reduce((sum, item) => sum + (item.calories || 0), 0);
-            const remaining = settings.goalCalories - eaten;
+<!-- Неделя -->
+<div id="week" class="tab">
+    <h2>Календарь на неделю</h2>
+    <div id="weekList"></div>
+</div>
 
-            const totalCarbs = food.reduce((sum, item) => sum + (item.carbs || 0), 0);
-            const totalProtein = food.reduce((sum, item) => sum + (item.protein || 0), 0);
-            const totalFat = food.reduce((sum, item) => sum + (item.fat || 0), 0);
+<!-- Добавление еды -->
+<div id="add" class="tab">
+    <h2>Добавить еду</h2>
+    <input type="text" id="foodName" placeholder="Название продукта">
+    <input type="number" id="foodAmount" placeholder="Граммы">
+    <input type="number" id="foodCalories" placeholder="Калории">
+    <input type="number" id="foodProtein" placeholder="Белки">
+    <input type="number" id="foodFat" placeholder="Жиры">
+    <input type="number" id="foodCarbs" placeholder="Углеводы">
+    <select id="foodMeal">
+        <option value="breakfast">Завтрак</option>
+        <option value="lunch">Обед</option>
+        <option value="dinner">Ужин</option>
+        <option value="snacks">Перекус</option>
+    </select>
+    <button onclick="saveFood()">Сохранить</button>
+    <h3>Распознавание по фото</h3>
+    <input type="file" id="foodPhoto" accept="image/*">
+    <button onclick="recognizePhoto()">Распознать</button>
+    <div id="recognizedFood"></div>
+</div>
 
-            const summaryContainer = document.getElementById('calorie-summary');
-            const progress = eaten / (settings.goalCalories || 1);
-            const radius = 83;
-            const circumference = 2 * Math.PI * radius;
-            const offset = circumference - (Math.min(progress, 1) * circumference);
+<!-- Настройки API -->
+<div id="settings" class="tab">
+    <h2>API Настройки</h2>
+    <input type="text" id="edamamAppId" placeholder="Edamam App ID">
+    <input type="text" id="edamamAppKey" placeholder="Edamam App Key">
+    <input type="text" id="clarifaiKey" placeholder="Clarifai API Key">
+    <button onclick="saveApiKeys()">Сохранить</button>
+</div>
 
-            summaryContainer.innerHTML = `
-                <div class="calorie-circle-container">
-                    <svg class="calorie-circle-svg"><circle class="progress-ring-bg" cx="90" cy="90" r="${radius}"></circle><circle class="progress-ring-fg" cx="90" cy="90" r="${radius}" style="stroke-dasharray: ${circumference}; stroke-dashoffset: ${offset};"></circle></svg>
-                    <div class="circle-text"><div class="circle-text-remaining">${remaining.toFixed(0)}</div><div class="circle-text-label">Осталось ккал</div></div>
-                </div>
-                <div class="calorie-details">
-                    <div class="detail-item"><p class="eaten">${eaten.toFixed(0)}</p><span>Съедено</span></div>
-                </div>`;
-            
-            const macrosContainer = document.getElementById('macros-summary');
-            macrosContainer.innerHTML = `
-                <div class="macro" id="carbs-progress">
-                    <div class="macro-header"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAARlJREFUaEPtmdENwyAMRb830E1gE5gENoFN0I3QTWAbwAbSCbQTD4mIdoBEfPgiUvj7k/g5pxOiIAgCgkBXa2tB3t4u4Z1gDhPBDsC93Yjz2P0hCCuA3w+QZ6/dD4KxBdgN93Yi3t4uYQ5ngK1atWq12g/w4wCS2n4IxhbgN9zbifL0VjCncwBFpaIggjEB+PPgiLQNwjKEKV0AU2kphGFMwH4+OKLtDMIyZgAVKWgExhDg14Mj2jYIy1gBFJSCEgI8/QdoxV+LYO93gJBIKSLg14Mj2jYIy5gBVJSCEgI8/QdoxV+L4O13AElJISLg14Mj2jYIy5gBVJSCEgJ8+g/QqvxZBO/eA0hKCSHg94MjeT8IxqgAXG53eXj7/0G0a9WqVKv9Ad/eD4LgG4VpAAAAAElFTkSuQmCC"> Углеводы</div>
-                    <div class="macro-value">${totalCarbs.toFixed(0)} г</div>
-                    <div class="progress-bar"><div class="progress-bar-fill" style="width: ${Math.min(100, (totalCarbs / (settings.goalCarbs || 1)) * 100)}%;"></div></div>
-                </div>
-                <div class="macro" id="protein-progress">
-                    <div class="macro-header"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAhtJREFUaEPtmd1xwyAMhV83gG4AGzACNkA3gA1gA5gI3AA2gA3gBtAJ3BO6lEhybOkokqT4A5V8sM/97L23l2SiWEQixUvSCbRdXV3h7e2t4l8A/2r1q1qt9n8C/J5Wq/11sVjM5fP5lHqYz+dzSaPRyGaz2YF2vS+V/wSAs2w2M4VCoUjW2tq6FjsAU/3+/q5er88kK5VK2UDAXk0mk20mk7kE8D6VSiXz+fwZgA/b9/05gN2pXq/PiqL4GoDFYpEHDvCtwu/7m18A/wT+P8PzM4BWq9WEgP1oOp1uy+XyEoB3y+Xy7Xg8PoM5wKzdbvdjY2MDALba2tpaFBzArEqlkkql0iKAr5VK5a1yuZxG7Y5Go62lpaUrgG8ul8v/sVi8B/B+sVj8LpPJ/BvAR+Px+O1SqfQWwGaz+QngfZVKpa3dbi9Ab29vv7i6unoDsFar1TpwPp/P83q9viN93t/fXwTgj+PxeL1er4P9wGAw+ADgXQzDBwA+3n/jANs4jg8YhuHDwWBw1d/f/yIAj8fjwbIsP2EYvguwH6wXAGzLsvxUKvUJ4C2VSv1ijUbTgwMctizLD/o/wP/55z9kGO5tZ2fnUigUb3G/3/8YwN+FQqEnnU7/BGDDcDsA88FisXgej+cWwGq13pVK5fE/wJtWq/3p7u7+AQBfK5XKY7FY/C9Wq9UqEIlEWgM0o2VbAAAAAElFTkSuQmCC"> Белки</div>
-                    <div class="macro-value">${totalProtein.toFixed(0)} г</div>
-                    <div class="progress-bar"><div class="progress-bar-fill" style="width: ${Math.min(100, (totalProtein / (settings.goalProtein || 1)) * 100)}%;"></div></div>
-                </div>
-                <div class="macro" id="fat-progress">
-                    <div class="macro-header"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAjBJREFUaEPtmF1RAzEMhV83AAbACLABMhAyAWQCkAEyAQkQATJABkKC3lPZsrw09u7u5o8qOVrS7vN6/Z4klxTGRFh8UbrA7e3tla6urlb9JcBHtbW1ZrPZCb5qtVqvVqv1C+AbzGazJ4vF4gLAgYODg4ODg58A/q7V6r31ej3A9/1+v/9/v9/f19fX4ziO4wWAkydPntzc3PwqAHe3t7c3Vqv1WQDf1Wr1sYODg8/j8fgU4Cd1dXWFqqq+AnherVa/u7q6EgCslpaW7sFgMAWwWCwW/2EYvgLwUqvVHwwG86qqvjEA27quWZZlWQD/XqvV/gngy+Px+JzP5/8L4Jtms/lms/kgQLqu65IkPQH4UKvVHsMw3NXV1RUIBHgI4E3T9J+maf/rDODfpmk/4zi+BfD96urqO51O5wLAzM/P7w8Gg4MAnq7rfg8A/r979+5bKpX6COBppVL59vj4+CeAv2EYvufz+X8A3jUajfPxeHwKYDAYfNPS0nISwJ9MJvNtOp1uAVim6ePxeHwDsNfr9W+m0+kfgW9MJvMfrVYrAEiSpMvlch/43t/fXz98+PAWwPv9/f2lUqkbAB4+fPj27du3bwBeunTp9Z07d+7dunXr/wLe3d/fPzw4OPglAJeXl5evXr26DsCVl5dXV1dXN2EYvhegtbU13d3dXQGq1+sfHR0dXQFYrVZ/ODk5GQAWjUbT/X6/PyB4/AZ772J3y2g0mgAAAABJRU5ErkJggg=="> Жиры</div>
-                    <div class="macro-value">${totalFat.toFixed(0)} г</div>
-                    <div class="progress-bar"><div class="progress-bar-fill" style="width: ${Math.min(100, (totalFat / (settings.goalFat || 1)) * 100)}%;"></div></div>
-                </div>
-            `;
-        }
+<script>
+// Tabs
+const tabs = document.querySelectorAll('.tab-btn');
+tabs.forEach(tab => {
+    tab.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+    });
+});
 
-        function createMealCard(type, name, icon, foodList) {
-            const mealItems = foodList.filter(f => f.mealType === type);
-            const totalCalories = mealItems.reduce((sum, item) => sum + item.calories, 0);
-            let foodHtml = mealItems.map(item => `<div onclick="event.stopPropagation(); removeFood('${item.id}')">${item.name} (${item.weight}г) - ${item.calories.toFixed(0)} ккал</div>`).join('');
-            
-            return `
-            <div class="meal-card">
-                <div class="icon">${icon}</div>
-                <div class="details"><p>${name}</p><span>${totalCalories.toFixed(0)} ккал</span><div style="font-size: 0.8em; margin-top: 5px; color: #555;">${foodHtml || ''}</div></div>
-                <button class="action-btn" onclick="openFoodModal('${type}')">+</button>
-            </div>`;
-        }
-        
-        function renderStats(days, element) {
-            document.querySelectorAll('.stats-tabs .tab').forEach(t => t.classList.remove('active'));
-            if(element) element.classList.add('active');
-            // ... остальной код статистики ...
-        }
-        
-        // ... Остальные функции (getStatsData, Календарь, Настройки) остаются без изменений ...
-        function getStatsData(days) { let allFood = []; let dailyCalories = []; const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']; for (let i = days - 1; i >= 0; i--) { const date = new Date(); date.setDate(date.getDate() - i); const dateKey = date.toISOString().split('T')[0]; const data = loadDataForDate(dateKey); if (data.food) allFood.push(...data.food); dailyCalories.push({ calories: (data.food || []).reduce((sum, item) => sum + item.calories, 0), label: dayNames[date.getDay()] }); } return { allFood, dailyCalories, totalCalories: allFood.reduce((sum, item) => sum + item.calories, 0) }; }
-        function openCalendarModal() { document.getElementById('calendarModal').style.display = 'flex'; renderCalendar(); }
-        function closeCalendarModal() { document.getElementById('calendarModal').style.display = 'none'; }
-        function changeCalendarMonth(monthOffset) { calendarDate.setMonth(calendarDate.getMonth() + monthOffset); renderCalendar(); }
-        function renderCalendar() { const grid = document.getElementById('calendar-grid'); const display = document.getElementById('month-year-display'); grid.innerHTML = ''; const year = calendarDate.getFullYear(); const month = calendarDate.getMonth(); display.textContent = calendarDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }); const firstDayOfMonth = new Date(year, month, 1); const daysInMonth = new Date(year, month + 1, 0).getDate(); const dayOffset = (firstDayOfMonth.getDay() === 0) ? 6 : firstDayOfMonth.getDay() - 1; for (let i = 0; i < dayOffset; i++) { grid.innerHTML += `<div></div>`; } for (let day = 1; day <= daysInMonth; day++) { const dayEl = document.createElement('div'); dayEl.className = 'day'; dayEl.textContent = day; const currentDayDate = new Date(year, month, day); const dateKey = currentDayDate.toISOString().split('T')[0]; const data = loadDataForDate(dateKey); const settings = loadSettings(); const eaten = (data.food || []).reduce((sum, item) => sum + item.calories, 0); if (eaten >= settings.goalCalories) dayEl.classList.add('completed'); if (currentDayDate.toDateString() === new Date().toDateString()) dayEl.classList.add('today'); if (currentDayDate.toDateString() === selectedDate.toDateString()) dayEl.classList.add('selected'); dayEl.onclick = () => { selectedDate = currentDayDate; changeDate(0); closeCalendarModal(); }; grid.appendChild(dayEl); } }
-        function loadDataForDate(dateKey) { return JSON.parse(localStorage.getItem(dateKey) || '{}'); }
-        function saveDataForDate(dateKey, data) { localStorage.setItem(dateKey, JSON.stringify(data)); }
-        function saveSettings() { const settings = { goalCalories: document.getElementById('goal-calories-input').value, goalCarbs: document.getElementById('goal-carbs-input').value, goalProtein: document.getElementById('goal-protein-input').value, goalFat: document.getElementById('goal-fat-input').value, edamamId: document.getElementById('edamam-id-input').value, edamamKey: document.getElementById('edamam-key-input').value, foodApiKey: document.getElementById('food-api-key-input').value }; localStorage.setItem('userSettings', JSON.stringify(settings)); alert('Настройки сохранены!'); renderDiary(); showPage('diaryPage'); }
-        function loadSettings() { const settings = JSON.parse(localStorage.getItem('userSettings') || '{}'); const defaults = { goalCalories: 2000, goalCarbs: 250, goalProtein: 150, goalFat: 70, edamamId: '', edamamKey: '', foodApiKey: '' }; const finalSettings = { ...defaults, ...settings }; if(document.getElementById('goal-calories-input')) { document.getElementById('goal-calories-input').value = finalSettings.goalCalories; document.getElementById('goal-carbs-input').value = finalSettings.goalCarbs; document.getElementById('goal-protein-input').value = finalSettings.goalProtein; document.getElementById('goal-fat-input').value = finalSettings.goalFat; document.getElementById('edamam-id-input').value = finalSettings.edamamId; document.getElementById('edamam-key-input').value = finalSettings.edamamKey; document.getElementById('food-api-key-input').value = finalSettings.foodApiKey; } return finalSettings; }
+// Data
+let data = { breakfast: [], lunch: [], dinner: [], snacks: [] };
+let dailyCalories = 2000;
 
-        function openFoodModal(type) {
-            if (type) document.getElementById('meal-type-select').value = type;
-            document.getElementById('addFoodModal').style.display = 'flex';
-            document.getElementById('weight-calculator').style.display = 'none';
-            baseNutrients = { calories: 0, protein: 0, fat: 0, carbs: 0 };
-        }
-        function closeFoodModal() { document.getElementById('addFoodModal').style.display = 'none'; }
-        
-        async function translateText(text) {
-            if (!text || !/[a-zA-Z]/.test(text)) return text;
-            try {
-                const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ru`);
-                if (!response.ok) return text;
-                const data = await response.json();
-                return data.responseData?.translatedText || text;
-            } catch (error) { return text; }
-        }
-        
-        function originalSearchFoodByText() {
-            const query = document.getElementById('search-food-input').value;
-            searchFoodByText(query);
-        }
-
-        async function searchFoodByText(query) {
-            const settings = loadSettings();
-            if (!settings.edamamId || !settings.edamamKey) { alert('Введите API ключи Edamam в настройках'); return; }
-            const resultsDiv = document.getElementById('search-results');
-            resultsDiv.innerHTML = `Поиск данных для "${query}"...`;
-            const url = `https://api.edamam.com/api/food-database/v2/parser?app_id=${settings.edamamId}&app_key=${settings.edamamKey}&ingr=${encodeURIComponent(query)}&nutrition-type=logging`;
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`Ошибка сети: ${response.status}`);
-                const data = await response.json();
-                if (data.hints && data.hints.length > 0) {
-                    const food = data.hints[0].food;
-                    const nutrients = food.nutrients;
-                    const translatedName = await translateText(food.label);
-                    const foodData = { name: translatedName, calories: nutrients.ENERC_KCAL || 0, protein: nutrients.PROCNT || 0, fat: nutrients.FAT || 0, carbs: nutrients.CHOCDF || 0 };
-                    selectFood(foodData);
-                    resultsDiv.innerHTML = `Данные для "${translatedName}" загружены!`;
-                } else {
-                    resultsDiv.innerHTML = `Не найдено данных о калориях для "${query}".`;
-                }
-            } catch (error) { resultsDiv.innerHTML = `Ошибка поиска: ${error.message}`; }
-        }
-
-        // НАЧАЛО ФИНАЛЬНОГО, ИСПРАВЛЕННОГО БЛОКА С ПРОКСИ
-async function recognizeFoodByImage(input) {
-    const settings = loadSettings();
-    const PAT = settings.foodApiKey;
-    if (!PAT) {
-        alert('Ключ API (PAT) от Clarifai не указан в настройках.');
-        return;
+function updateCircle() {
+    let totalCalories=0, totalProtein=0, totalFat=0, totalCarbs=0;
+    for(let meal in data){
+        data[meal].forEach(f=>{ totalCalories+=f.calories; totalProtein+=f.protein; totalFat+=f.fat; totalCarbs+=f.carbs; });
     }
-    if (!input.files[0]) return;
+    document.getElementById('caloriesText').innerHTML = `${totalCalories} / ${dailyCalories} kcal<br>Б:${totalProtein} Ж:${totalFat} У:${totalCarbs}`;
+    // Circle fill update
+    let percent = Math.min(totalCalories/dailyCalories*100,100);
+    document.getElementById('circleFill').style.background = `conic-gradient(#3498db ${percent*0.4}%, #2ecc71 ${percent*0.4}% ${percent*0.7}%, #e74c3c ${percent*0.7}% ${percent}%, #eee 0%)`;
+}
 
-    // Используем самый стандартный и надежный прокси-сервер
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-    const targetUrl = 'https://api.clarifai.com/v2/models/food-item-recognition/versions/1d5fd481e0cf4826aa72ec3ff049e044/outputs';
+function renderMeals(){
+    for(let meal in data){
+        let ul = document.getElementById(meal).querySelector('.meal-list');
+        ul.innerHTML = '';
+        data[meal].forEach(f=>{ ul.innerHTML += `<li>${f.name} ${f.amount}g - ${f.calories} kcal (Б:${f.protein} Ж:${f.fat} У:${f.carbs})</li>`});
+        // Update progress bar
+        let totalMealCalories = data[meal].reduce((a,b)=>a+b.calories,0);
+        let width = Math.min(totalMealCalories/dailyCalories*100,100);
+        document.getElementById(meal+'Progress').style.width = width+'%';
+    }
+    updateCircle();
+}
 
-    document.getElementById('search-results').innerHTML = 'Анализ фото...';
-    
-    const reader = new FileReader();
-    reader.onload = async () => {
-        const base64Image = reader.result.split(',')[1];
-        const raw = JSON.stringify({
-            "user_app_id": { "user_id": "clarifai", "app_id": "main" },
-            "inputs": [{ "data": { "image": { "base64": base64Image } } }]
-        });
+function addMeal(meal){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelector('[data-tab="add"]').classList.add('active');
+    document.getElementById('foodMeal').value = meal;
+}
 
-        const requestOptions = {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': 'Key ' + PAT
-            },
-            body: raw
-        };
-
-        try {
-            const response = await fetch(proxyUrl + targetUrl, requestOptions);
-            
-            if (!response.ok) {
-                let errorText = await response.text();
-                try { 
-                    errorText = JSON.parse(errorText).status.details || errorText; 
-                } catch (e) {
-                    if (errorText.includes("request temporary access")) {
-                         throw new Error(`Прокси-сервер требует активации. Пожалуйста, перейдите по ссылке https://cors-anywhere.herokuapp.com/ и нажмите на кнопку 'Request temporary access'.`);
-                    }
-                }
-                throw new Error(`Ошибка сети: ${response.status}. ${errorText}`);
-            }
-
-            const data = await response.json();
-
-            const concepts = data.outputs[0].data.concepts;
-            if (concepts && concepts.length > 0) {
-                const resultsDiv = document.getElementById('search-results');
-                resultsDiv.innerHTML = 'Что это? Выберите наиболее точный вариант:';
-                
-                // Показываем варианты на английском языке для надежного поиска
-                for (const concept of concepts.slice(0, 5)) {
-                    const originalName = concept.name;
-                    // Создаем кнопку с оригинальным английским названием
-                    resultsDiv.innerHTML += `<button class="primary" onclick="searchFoodByText('${originalName.replace(/'/g, "\\'")}')">${originalName}</button>`;
-                }
-            } else {
-                document.getElementById('search-results').innerHTML = 'Не удалось распознать еду на фото.';
-            }
-        } catch (error) {
-            console.error('Ошибка при распознавании:', error);
-            document.getElementById('search-results').innerHTML = `Произошла ошибка: ${error.message}`;
-        } finally {
-            input.value = '';
-        }
+function saveFood(){
+    const f = {
+        name: document.getElementById('foodName').value,
+        amount: parseInt(document.getElementById('foodAmount').value),
+        calories: parseInt(document.getElementById('foodCalories').value),
+        protein: parseInt(document.getElementById('foodProtein').value),
+        fat: parseInt(document.getElementById('foodFat').value),
+        carbs: parseInt(document.getElementById('foodCarbs').value)
     };
-    reader.readAsDataURL(input.files[0]);
+    const meal = document.getElementById('foodMeal').value;
+    data[meal].push(f);
+    renderMeals();
+    alert('Продукт добавлен!');
 }
-// КОНЕЦ ФИНАЛЬНОГО, НАДЕЖНОГО БЛОКА```
-// КОНЕЦ ФИНАЛЬНОГО, ИСПРАВЛЕННОГО БЛОКА С ПРОКСИ
-// КОНЕЦ ИСПРАВЛЕННОЙ ФУНКЦИИ
 
-// ТАКЖЕ НУЖНО ИСПРАВИТЬ ОТОБРАЖЕНИЕ В КАРТОЧКЕ
-function createMealCard(type, name, icon, foodList) {
-    const mealItems = foodList.filter(f => f.mealType === type);
-    const totalCalories = mealItems.reduce((sum, item) => sum + item.calories, 0);
-    
-    // ИСПРАВЛЕНИЕ: Проверяем, есть ли вес, перед тем как его отображать
-    let foodHtml = mealItems.map(item => {
-        const weightText = item.weight ? `(${item.weight}г)` : ''; // Показываем вес, только если он есть
-        return `<div onclick="event.stopPropagation(); removeFood('${item.id}')">${item.name} ${weightText} - ${item.calories.toFixed(0)} ккал</div>`;
-    }).join('');
-    
-    return `
-    <div class="meal-card">
-        <div class="icon">${icon}</div>
-        <div class="details"><p>${name}</p><span>${totalCalories.toFixed(0)} ккал</span><div style="font-size: 0.8em; margin-top: 5px; color: #555;">${foodHtml || ''}</div></div>
-        <button class="action-btn" onclick="openFoodModal('${type}')">+</button>
-    </div>`;
+function saveApiKeys(){
+    localStorage.setItem('edamamAppId', document.getElementById('edamamAppId').value);
+    localStorage.setItem('edamamAppKey', document.getElementById('edamamAppKey').value);
+    localStorage.setItem('clarifaiKey', document.getElementById('clarifaiKey').value);
+    alert('Ключи сохранены!');
 }
-    </script>
+
+function recognizePhoto(){
+    const file = document.getElementById('foodPhoto').files[0];
+    if(!file) return alert('Выберите фото');
+    const key = localStorage.getItem('clarifaiKey');
+    if(!key) return alert('Установите Clarifai API Key в настройках');
+    document.getElementById('recognizedFood').innerText = 'Распознавание: пример продукта';
+}
+
+// Week view
+function renderWeek(){
+    let weekDiv = document.getElementById('weekList');
+    weekDiv.innerHTML = '';
+    for(let i=0;i<7;i++){
+        weekDiv.innerHTML += `<div class="week-day"><h4>День ${i+1}</h4><div class="week-progress"><div style="width:${Math.floor(Math.random()*100)}%;background:#1abc9c"></div></div></div>`;
+    }
+}
+renderWeek();
+</script>
+</main>
 </body>
 </html>
-
-
-
