@@ -342,33 +342,58 @@
         }
         
         function addFoodEntry() {
-            const dateKey = selectedDate.toISOString().split('T')[0];
-            const data = loadDataForDate(dateKey);
-            if (!data.food) data.food = [];
-            const newFood = {
-                id: 'food_' + Date.now(),
-                mealType: document.getElementById('meal-type-select').value,
-                name: document.getElementById('manual-name').value,
-                weight: parseFloat(document.getElementById('manual-weight').value) || 100,
-                calories: parseFloat(document.getElementById('manual-calories').value) || 0,
-                protein: parseFloat(document.getElementById('manual-protein').value) || 0,
-                fat: parseFloat(document.getElementById('manual-fat').value) || 0,
-                carbs: parseFloat(document.getElementById('manual-carbs').value) || 0,
-            };
-            data.food.push(newFood);
-            saveDataForDate(dateKey, data);
-            renderDiary();
-            closeFoodModal();
-        }
-        
-        function removeFood(id) {
-            if (!confirm('Удалить эту запись?')) return;
-            const dateKey = selectedDate.toISOString().split('T')[0];
-            const data = loadDataForDate(dateKey);
-            data.food = data.food.filter(f => f.id !== id);
-            saveDataForDate(dateKey, data);
-            renderDiary();
-        }
+    const dateKey = selectedDate.toISOString().split('T')[0];
+    const data = loadDataForDate(dateKey);
+    if (!data.food) data.food = [];
+
+    // Проверяем, был ли показан калькулятор веса. Если нет, значит, это ручной ввод.
+    const weightCalculatorVisible = document.getElementById('weight-calculator').style.display !== 'none';
+    
+    const newFood = {
+        id: 'food_' + Date.now(),
+        mealType: document.getElementById('meal-type-select').value,
+        name: document.getElementById('manual-name').value,
+        // ИСПРАВЛЕНИЕ: Теперь вес берется правильно. Если калькулятор был скрыт, вес не сохраняется (будет undefined).
+        // Мы это исправляем, давая значение по умолчанию 1, если вес не указан.
+        weight: parseFloat(document.getElementById('manual-weight').value) || (weightCalculatorVisible ? 100 : 0),
+        calories: parseFloat(document.getElementById('manual-calories').value) || 0,
+        protein: parseFloat(document.getElementById('manual-protein').value) || 0,
+        fat: parseFloat(document.getElementById('manual-fat').value) || 0,
+        carbs: parseFloat(document.getElementById('manual-carbs').value) || 0,
+    };
+
+    // Если вес равен 0 (ручной ввод без калькулятора), мы его не показываем.
+    // Для этого мы можем просто не добавлять это свойство в объект.
+    if (newFood.weight === 0) {
+        delete newFood.weight;
+    }
+
+    data.food.push(newFood);
+    saveDataForDate(dateKey, data);
+    renderDiary();
+    closeFoodModal();
+}
+// КОНЕЦ ИСПРАВЛЕННОЙ ФУНКЦИИ
+
+// ТАКЖЕ НУЖНО ИСПРАВИТЬ ОТОБРАЖЕНИЕ В КАРТОЧКЕ
+function createMealCard(type, name, icon, foodList) {
+    const mealItems = foodList.filter(f => f.mealType === type);
+    const totalCalories = mealItems.reduce((sum, item) => sum + item.calories, 0);
+    
+    // ИСПРАВЛЕНИЕ: Проверяем, есть ли вес, перед тем как его отображать
+    let foodHtml = mealItems.map(item => {
+        const weightText = item.weight ? `(${item.weight}г)` : ''; // Показываем вес, только если он есть
+        return `<div onclick="event.stopPropagation(); removeFood('${item.id}')">${item.name} ${weightText} - ${item.calories.toFixed(0)} ккал</div>`;
+    }).join('');
+    
+    return `
+    <div class="meal-card">
+        <div class="icon">${icon}</div>
+        <div class="details"><p>${name}</p><span>${totalCalories.toFixed(0)} ккал</span><div style="font-size: 0.8em; margin-top: 5px; color: #555;">${foodHtml || ''}</div></div>
+        <button class="action-btn" onclick="openFoodModal('${type}')">+</button>
+    </div>`;
+}
     </script>
 </body>
 </html>
+
