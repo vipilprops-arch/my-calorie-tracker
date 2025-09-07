@@ -583,6 +583,7 @@ function updateSummary() {
     }
 
 // НАЧАЛО ФИНАЛЬНОГО, ИСПРАВЛЕННОГО БЛОКА
+// НАЧАЛО ФИНАЛЬНОГО, НАДЕЖНОГО БЛОКА
 async function recognizeFoodByImage(input) {
     const settings = loadSettings();
     const PAT = settings.foodApiKey;
@@ -592,8 +593,8 @@ async function recognizeFoodByImage(input) {
     }
     if (!input.files[0]) return;
 
-    // Используем надежный прокси-сервер
-    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+    // Используем самый стандартный прокси, который теперь должен работать
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
     const targetUrl = 'https://api.clarifai.com/v2/models/food-item-recognition/versions/1d5fd481e0cf4826aa72ec3ff049e044/outputs';
 
     document.getElementById('search-results').innerHTML = 'Анализ фото...';
@@ -608,23 +609,35 @@ async function recognizeFoodByImage(input) {
 
         const requestOptions = {
             method: 'POST',
-            headers: { 'Accept': 'application/json', 'Authorization': 'Key ' + PAT },
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': 'Key ' + PAT
+            },
             body: raw
         };
 
         try {
             // Отправляем запрос через прокси
-            const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), requestOptions);
+            const response = await fetch(proxyUrl + targetUrl, requestOptions);
             
             if (!response.ok) {
+                // Улучшенная обработка текста ошибки
                 let errorText = await response.text();
-                try { errorText = JSON.parse(errorText).status.details || errorText; } catch (e) {}
+                try { 
+                    // Пытаемся достать детальное сообщение, если ответ - JSON
+                    errorText = JSON.parse(errorText).status.details || errorText; 
+                } catch (e) {
+                    // Если ответ не JSON, показываем как есть
+                    console.log("Ответ от прокси не является JSON:", errorText);
+                }
+                // Если прокси требует активации, выводим специальное сообщение
+                if (response.status === 403 && errorText.includes("request temporary access")) {
+                     throw new Error(`Прокси-сервер требует активации. Пожалуйста, перейдите по ссылке https://cors-anywhere.herokuapp.com/ и нажмите на кнопку 'Request temporary access'.`);
+                }
                 throw new Error(`Ошибка сети: ${response.status}. ${errorText}`);
             }
 
-            // Получаем текстовый ответ и парсим его вручную для надежности
-            const responseText = await response.text();
-            const data = JSON.parse(responseText);
+            const data = await response.json();
 
             const concepts = data.outputs[0].data.concepts;
             if (concepts && concepts.length > 0) {
@@ -638,7 +651,7 @@ async function recognizeFoodByImage(input) {
                 document.getElementById('search-results').innerHTML = 'Не удалось распознать еду на фото.';
             }
         } catch (error) {
-            console.error('Ошибка при распознавании Clarifai:', error);
+            console.error('Ошибка при распознавании:', error);
             document.getElementById('search-results').innerHTML = `Произошла ошибка: ${error.message}`;
         } finally {
             input.value = '';
@@ -646,6 +659,7 @@ async function recognizeFoodByImage(input) {
     };
     reader.readAsDataURL(input.files[0]);
 }
+// КОНЕЦ ФИНАЛЬНОГО, НАДЕЖНОГО БЛОКА
 // КОНЕЦ ФИНАЛЬНОГО, ИСПРАВЛЕННОГО БЛОКА
 
     function selectFood(data) {
@@ -699,6 +713,7 @@ async function recognizeFoodByImage(input) {
     </script>
 </body>
 </html>
+
 
 
 
