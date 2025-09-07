@@ -320,7 +320,6 @@ async function recognizeFoodByImage(input) {
         };
 
         try {
-            // Отправляем запрос через прокси
             const response = await fetch(proxyUrl + targetUrl, requestOptions);
             
             if (!response.ok) {
@@ -328,7 +327,6 @@ async function recognizeFoodByImage(input) {
                 try { 
                     errorText = JSON.parse(errorText).status.details || errorText; 
                 } catch (e) {
-                    // Если прокси требует активации, выводим специальное сообщение
                     if (errorText.includes("request temporary access")) {
                          throw new Error(`Прокси-сервер требует активации. Пожалуйста, перейдите по ссылке https://cors-anywhere.herokuapp.com/ и нажмите на кнопку 'Request temporary access'.`);
                     }
@@ -342,9 +340,12 @@ async function recognizeFoodByImage(input) {
             if (concepts && concepts.length > 0) {
                 const resultsDiv = document.getElementById('search-results');
                 resultsDiv.innerHTML = 'Что это? Выберите наиболее точный вариант:';
+                
+                // Показываем варианты на английском языке для надежного поиска
                 for (const concept of concepts.slice(0, 5)) {
-                    const translatedName = await translateText(concept.name);
-                    resultsDiv.innerHTML += `<button class="primary" onclick="searchFoodByText('${translatedName.replace(/'/g, "\\'")}')">${translatedName}</button>`;
+                    const originalName = concept.name;
+                    // Создаем кнопку с оригинальным английским названием
+                    resultsDiv.innerHTML += `<button class="primary" onclick="searchFoodByText('${originalName.replace(/'/g, "\\'")}')">${originalName}</button>`;
                 }
             } else {
                 document.getElementById('search-results').innerHTML = 'Не удалось распознать еду на фото.';
@@ -358,6 +359,7 @@ async function recognizeFoodByImage(input) {
     };
     reader.readAsDataURL(input.files[0]);
 }
+// КОНЕЦ ФИНАЛЬНОГО, НАДЕЖНОГО БЛОКА```
 // КОНЕЦ ФИНАЛЬНОГО, ИСПРАВЛЕННОГО БЛОКА С ПРОКСИ
 // КОНЕЦ ИСПРАВЛЕННОЙ ФУНКЦИИ
 
@@ -382,5 +384,6 @@ function createMealCard(type, name, icon, foodList) {
     </script>
 </body>
 </html>
+
 
 
