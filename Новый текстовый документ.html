@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Дневник Питания</title>
+    <style>
+        :root {
+            --primary-color: #00b894; /* Бирюзовый, как на скриншоте */
+            --background-color: #f7f8fa;
+            --card-color: #ffffff;
+            --text-color: #2d3436;
+            --secondary-text-color: #636e72;
+            --icon-bg-color: #e8f8f5; /* Светлый фон для иконок */
+            --water-color: #0984e3;
+            --water-bg-color: #eaf5fc;
+        }
+        
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .page { display: none; padding-bottom: 90px; }
+        .page.active { display: block; }
+        
+        /* --- Нижняя навигация --- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            display: flex;
+            background-color: var(--card-color);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+            padding: 10px 0;
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 1000;
+        }
+        .nav-item { flex: 1; text-align: center; color: var(--secondary-text-color); cursor: pointer; }
+        .nav-item.active { color: var(--primary-color); }
+        .nav-item svg { width: 24px; height: 24px; margin-bottom: 2px; }
+        .nav-item div { font-size: 0.7em; }
+
+        /* --- Страница "Дневник" --- */
+        .header { background: var(--card-color); padding: 15px; padding-top: env(safe-area-inset-top); }
+        .calendar-strip { display: flex; justify-content: space-around; align-items: center; margin-bottom: 15px; }
+        .calendar-strip .day { text-align: center; padding: 8px; border-radius: 12px; cursor: pointer; width: 38px; }
+        .calendar-strip .day.active { background-color: var(--primary-color); color: white; }
+        .calendar-strip .day-name { font-size: 0.8em; }
+        .calendar-strip .day.active .day-name { color: rgba(255,255,255,0.8); }
+
+        .tracker-card {
+            display: flex;
+            align-items: center;
+            background: var(--card-color);
+            padding: 15px;
+            border-radius: 16px;
+            margin: 12px 15px;
+            box-shadow: 0 4px 15px rgba(100,100,100,0.06);
+        }
+        .tracker-card .icon {
+            min-width: 40px; height: 40px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            margin-right: 15px;
+            background-color: var(--icon-bg-color);
+        }
+        .tracker-card .details { flex-grow: 1; }
+        .tracker-card .details p { margin: 0; font-weight: 500; }
+        .tracker-card .details span { font-size: 0.85em; color: var(--secondary-text-color); }
+        .tracker-card .action-btn {
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            background-color: var(--icon-bg-color);
+            color: var(--primary-color);
+            font-size: 1.8em;
+            border: none;
+            cursor: pointer;
+            line-height: 38px;
+        }
+        
+        .water-card .icon { background-color: var(--water-bg-color); }
+        .water-card .action-btn { background-color: var(--water-bg-color); color: var(--water-color); }
+        .water-card .details { text-align: center; }
+        
+        /* --- Модальное окно --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: var(--background-color);
+            flex-direction: column;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; }
+        .modal-header .close-btn { font-size: 2em; cursor: pointer; border: none; background: none; }
+        
+        .modal-content { padding: 0 15px; overflow-y: auto; flex-grow: 1; }
+        input, select {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            box-sizing: border-box;
+            background: #fff;
+        }
+        .file-upload-wrapper {
+            position: relative; overflow: hidden; display: inline-block;
+            width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 10px;
+            background: var(--primary-color); color: white; text-align: center; cursor: pointer;
+        }
+        .file-upload-wrapper input[type=file] {
+            font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer;
+        }
+        button.primary {
+            background-color: var(--primary-color); color: white; padding: 15px;
+            border: none; border-radius: 12px; cursor: pointer; width: 100%;
+            font-size: 1.1em; font-weight: 600;
+        }
+        #search-results button { background-color: #f0f0f0; color: #333; margin-bottom: 5px; text-align: left; }
+
+    </style>
+</head>
+<body>
+
+    <!-- PAGE 1: Дневник -->
+    <div id="diaryPage" class="page active">
+        <div class="header">
+            <div class="calendar-strip" id="calendar-strip"></div>
+        </div>
+        <div id="diary-content"></div>
+    </div>
+
+    <!-- PAGE 2: Больше/Настройки -->
+    <div id="settingsPage" class="page">
+        <div style="padding: 15px;">
+            <h2>Настройки</h2>
+            <div class="tracker-card">
+                <div class="details">
+                    <p>Цели</p>
+                    <input type="number" id="goal-calories-input" placeholder="Цель калорий (ккал)">
+                    <input type="number" id="goal-water-input" placeholder="Цель воды (мл)">
+                </div>
+            </div>
+            <div class="tracker-card">
+                 <div class="details">
+                    <p>API Edamam (Поиск по названию)</p>
+                    <input type="text" id="edamam-id-input" placeholder="Edamam Application ID">
+                    <input type="text" id="edamam-key-input" placeholder="Edamam Application Key">
+                </div>
+            </div>
+            <div class="tracker-card">
+                 <div class="details">
+                    <p>API (Распознавание по фото)</p>
+                    <input type="text" id="food-api-url-input" placeholder="URL для API распознавания">
+                    <input type="text" id="food-api-key-input" placeholder="API ключ для фото">
+                </div>
+            </div>
+            <button class="primary" onclick="saveSettings()">Сохранить</button>
+        </div>
+    </div>
+    
+    <!-- Нижняя навигация -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="showPage('diaryPage')">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <div>Дневник</div>
+        </div>
+        <div class="nav-item" onclick="showPage('settingsPage')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            <div>Больше</div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно -->
+    <div id="addFoodModal" class="modal">
+        <div class="modal-header">
+            <h2 id="modal-title"></h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-content">
+            <div class="file-upload-wrapper">
+                <span>📷 Распознать еду по фото</span>
+                <input type="file" id="photo-upload" accept="image/*" onchange="recognizeFoodByImage(this)">
+            </div>
+            <p style="text-align:center; color: var(--secondary-text-color); margin: 15px;">- или -</p>
+            <input type="search" id="search-food-input" placeholder="Поиск продукта по названию...">
+            <button class="primary" onclick="searchFoodByText()">Найти</button>
+            <div id="search-results" style="margin: 15px 0;"></div>
+            <hr>
+            <input type="text" id="manual-name" placeholder="Название">
+            <input type="number" id="manual-calories" placeholder="Калории">
+            <input type="number" id="manual-protein" placeholder="Белки (г)">
+            <input type="number" id="manual-fat" placeholder="Жиры (г)">
+            <input type="number" id="manual-carbs" placeholder="Углеводы (г)">
+            <button class="primary" onclick="addFoodEntry()">Добавить</button>
+        </div>
+    </div>
+    
+    <script>
+        let currentMealType = '';
+        let selectedDate = new Date();
+
+        // --- Основная логика при запуске ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            renderCalendarStrip();
+            renderDiary();
+            showPage('diaryPage');
+        });
+
+        // --- Навигация ---
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            const activeNavItem = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick') === `showPage('${pageId}')`);
+            if(activeNavItem) activeNavItem.classList.add('active');
+        }
+
+        function changeDate(days) {
+            selectedDate.setDate(selectedDate.getDate() + days);
+            renderCalendarStrip();
+            renderDiary();
+        }
+
+        // --- Рендеринг (Отрисовка интерфейса) ---
+        function renderCalendarStrip() {
+            const strip = document.getElementById('calendar-strip');
+            strip.innerHTML = '';
+            const today = new Date();
+            const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+            
+            for (let i = -3; i <= 3; i++) {
+                const date = new Date(selectedDate);
+                date.setDate(date.getDate() + i);
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'day';
+                if (date.toDateString() === selectedDate.toDateString()) {
+                    dayDiv.classList.add('active');
+                }
+                dayDiv.innerHTML = `<div class="day-name">${dayNames[date.getDay()]}</div><div class="day-number">${date.getDate()}</div>`;
+                dayDiv.onclick = () => {
+                    selectedDate = date;
+                    renderCalendarStrip();
+                    renderDiary();
+                };
+                strip.appendChild(dayDiv);
+            }
+        }
+
+        function renderDiary() {
+            const dateKey = selectedDate.toISOString().split('T')[0];
+            const data = loadDataForDate(dateKey);
+            const settings = loadSettings();
+            
+            const content = document.getElementById('diary-content');
+            content.innerHTML = `
+                ${createWaterCard(data.water || 0, settings.goalWater || 2000)}
+                ${createMealCard('breakfast', 'Завтрак', '🍞', data.food || [])}
+                ${createMealCard('lunch', 'Обед', '🍲', data.food || [])}
+                ${createMealCard('dinner', 'Ужин', '🌙', data.food || [])}
+                ${createMealCard('snacks', 'Перекус', '🍏', data.food || [])}
+                ${createSimpleCard('weight', 'Вес', '⚖️', (data.weight ? `${data.weight} кг` : 'Нет записей'), 'addWeight()')}
+                ${createSimpleCard('activity', 'Активность', '🔥', (data.activity ? `${data.activity} ккал` : 'Нет записей'), 'addActivity()')}
+            `;
+        }
+        
+        function createWaterCard(current, goal) {
+            return `
+            <div class="tracker-card water-card">
+                <button class="action-btn" onclick="updateWater(-250)">-</button>
+                <div class="details">
+                    <div class="icon">💧</div>
+                    <p>${current} / ${goal} мл</p>
+                    <span>Вода</span>
+                </div>
+                <button class="action-btn" onclick="updateWater(250)">+</button>
+            </div>`;
+        }
+
+        function createMealCard(type, name, icon, foodList) {
+            const mealItems = foodList.filter(f => f.mealType === type);
+            const totalCalories = mealItems.reduce((sum, item) => sum + item.calories, 0);
+            let foodHtml = mealItems.map(item => `<div onclick="removeFood('${item.id}')">${item.name} - ${item.calories.toFixed(0)} ккал</div>`).join('');
+            
+            return `
+            <div class="tracker-card">
+                <div class="icon">${icon}</div>
+                <div class="details">
+                    <p>${name}</p>
+                    <span id="${type}-details">${totalCalories.toFixed(0)} ккал</span>
+                    <div style="font-size: 0.8em; margin-top: 5px;">${foodHtml}</div>
+                </div>
+                <button class="action-btn" onclick="openModal('${type}', '${name}')">+</button>
+            </div>`;
+        }
+        
+        function createSimpleCard(type, name, icon, value, action) {
+            return `
+            <div class="tracker-card">
+                <div class="icon">${icon}</div>
+                <div class="details"><p>${name}</p><span>${value}</span></div>
+                <button class="action-btn" onclick="${action}">+</button>
+            </div>`;
+        }
+
+        // --- Работа с данными (localStorage) ---
+        function loadDataForDate(dateKey) {
+            return JSON.parse(localStorage.getItem(dateKey) || '{}');
+        }
+
+        function saveDataForDate(dateKey, data) {
+            localStorage.setItem(dateKey, JSON.stringify(data));
+        }
+
+        function saveSettings() {
+            const settings = {
+                goalCalories: document.getElementById('goal-calories-input').value,
+                goalWater: document.getElementById('goal-water-input').value,
+                edamamId: document.getElementById('edamam-id-input').value,
+                edamamKey: document.getElementById('edamam-key-input').value,
+                foodApiUrl: document.getElementById('food-api-url-input').value,
+                foodApiKey: document.getElementById('food-api-key-input').value
+            };
+            localStorage.setItem('userSettings', JSON.stringify(settings));
+            alert('Настройки сохранены!');
+            renderDiary();
+            showPage('diaryPage');
+        }
+
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem('userSettings') || '{}');
+            document.getElementById('goal-calories-input').value = settings.goalCalories || 2000;
+            document.getElementById('goal-water-input').value = settings.goalWater || 2000;
+            document.getElementById('edamam-id-input').value = settings.edamamId || '';
+            document.getElementById('edamam-key-input').value = settings.edamamKey || '';
+            document.getElementById('food-api-url-input').value = settings.foodApiUrl || '';
+            document.getElementById('food-api-key-input').value = settings.foodApiKey || '';
+            return settings;
+        }
+
+        // --- Модальное окно и API ---
+        function openModal(type, name) {
+            currentMealType = type;
+            document.getElementById('modal-title').textContent = `Добавить в "${name}"`;
+            document.getElementById('addFoodModal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('addFoodModal').style.display = 'none'; }
+        
+        async function searchFoodByText() {
+            const query = document.getElementById('search-food-input').value;
+            const settings = loadSettings();
+            if (!settings.edamamId || !settings.edamamKey) { alert('Введите API ключи Edamam в настройках'); return; }
+            
+            const resultsDiv = document.getElementById('search-results');
+            resultsDiv.innerHTML = 'Поиск...';
+            const url = `https://api.edamam.com/api/food-database/v2/parser?app_id=${settings.edamamId}&app_key=${settings.edamamKey}&ingr=${encodeURIComponent(query)}&nutrition-type=logging`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                resultsDiv.innerHTML = '';
+                data.hints.slice(0, 5).forEach(item => {
+                    const food = item.food;
+                    const nutrients = food.nutrients;
+                    const foodData = {
+                        name: food.label,
+                        calories: nutrients.ENERC_KCAL || 0,
+                        protein: nutrients.PROCNT || 0,
+                        fat: nutrients.FAT || 0,
+                        carbs: nutrients.CHOCDF || 0
+                    };
+                    resultsDiv.innerHTML += `<button class="primary" onclick='selectFood(${JSON.stringify(foodData)})'>${food.label} (${(nutrients.ENERC_KCAL || 0).toFixed(0)} ккал)</button>`;
+                });
+            } catch (error) { resultsDiv.innerHTML = 'Ошибка поиска.'; }
+        }
+        
+        async function recognizeFoodByImage(input) {
+            const settings = loadSettings();
+            if (!settings.foodApiUrl || !settings.foodApiKey) {
+                alert('URL и API ключ для распознавания по фото не указаны в настройках. Эта функция не будет работать.');
+                return;
+            }
+            if (!input.files[0]) return;
+
+            alert('Идет анализ фото... Эта функция является прототипом. Вам нужно убедиться, что URL API в настройках правильный.');
+
+            // --- ЭТОТ КОД НУЖНО АДАПТИРОВАТЬ ПОД ВАШ СЕРВИС РАСПОЗНАВАНИЯ ---
+            // const formData = new FormData();
+            // formData.append('image', input.files[0]);
+            //
+            // try {
+            //     const response = await fetch(settings.foodApiUrl, {
+            //         method: 'POST',
+            //         headers: { 'Authorization': `Bearer ${settings.foodApiKey}` },
+            //         body: formData
+            //     });
+            //     const data = await response.json();
+            //     // Здесь вы должны обработать ответ и заполнить поля, например:
+            //     // const foodData = { name: data.results[0].name, calories: data.results[0].calories, ... };
+            //     // selectFood(foodData);
+            // } catch (error) {
+            //     alert('Ошибка при распознавании изображения.');
+            // }
+        }
+
+        function selectFood(data) {
+            document.getElementById('manual-name').value = data.name;
+            document.getElementById('manual-calories').value = data.calories.toFixed(0);
+            document.getElementById('manual-protein').value = data.protein.toFixed(1);
+            document.getElementById('manual-fat').value = data.fat.toFixed(1);
+            document.getElementById('manual-carbs').value = data.carbs.toFixed(1);
+            document.getElementById('search-results').innerHTML = '';
+        }
+        
+        function addFoodEntry() {
+            const dateKey = selectedDate.toISOString().split('T')[0];
+            const data = loadDataForDate(dateKey);
+            if (!data.food) data.food = [];
+            
+            const newFood = {
+                id: 'food_' + Date.now(),
+                mealType: currentMealType,
+                name: document.getElementById('manual-name').value,
+                calories: parseFloat(document.getElementById('manual-calories').value) || 0,
+                protein: parseFloat(document.getElementById('manual-protein').value) || 0,
+                fat: parseFloat(document.getElementById('manual-fat').value) || 0,
+                carbs: parseFloat(document.getElementById('manual-carbs').value) || 0,
+            };
+            data.food.push(newFood);
+            saveDataForDate(dateKey, data);
+            renderDiary();
+            closeModal();
+        }
+        
+        function removeFood(id) {
+            if (!confirm('Удалить эту запись?')) return;
+            const dateKey = selectedDate.toISOString().split('T')[0];
+            const data = loadDataForDate(dateKey);
+            data.food = data.food.filter(f => f.id !== id);
+            saveDataForDate(dateKey, data);
+            renderDiary();
+        }
+        
+        // --- Другие действия ---
+        function updateWater(amount) {
+            const dateKey = selectedDate.toISOString().split('T')[0];
+            const data = loadDataForDate(dateKey);
+            data.water = (data.water || 0) + amount;
+            if (data.water < 0) data.water = 0;
+            saveDataForDate(dateKey, data);
+            renderDiary();
+        }
+
+        function addWeight() {
+            const weight = prompt('Введите ваш текущий вес в кг:');
+            if (weight && !isNaN(weight)) {
+                const dateKey = selectedDate.toISOString().split('T')[0];
+                const data = loadDataForDate(dateKey);
+                data.weight = parseFloat(weight);
+                saveDataForDate(dateKey, data);
+                renderDiary();
+            }
+        }
+        
+        function addActivity() {
+            const calories = prompt('Введите количество сожженных калорий:');
+            if (calories && !isNaN(calories)) {
+                const dateKey = selectedDate.toISOString().split('T')[0];
+                const data = loadDataForDate(dateKey);
+                data.activity = (data.activity || 0) + parseFloat(calories);
+                saveDataForDate(dateKey, data);
+                renderDiary();
+            }
+        }
+
+    </script>
+</body>
+</html>
