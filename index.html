@@ -390,33 +390,53 @@
             } catch (error) { resultsDiv.innerHTML = 'Ошибка поиска.'; }
         }
         
-        async function recognizeFoodByImage(input) {
+async function recognizeFoodByImage(input) {
             const settings = loadSettings();
             if (!settings.foodApiUrl || !settings.foodApiKey) {
-                alert('URL и API ключ для распознавания по фото не указаны в настройках. Эта функция не будет работать.');
+                alert('URL и API ключ для распознавания по фото не указаны в настройках.');
                 return;
             }
             if (!input.files[0]) return;
 
-            alert('Идет анализ фото... Эта функция является прототипом. Вам нужно убедиться, что URL API в настройках правильный.');
+            document.getElementById('search-results').innerHTML = 'Анализ фото...';
 
-            // --- ЭТОТ КОД НУЖНО АДАПТИРОВАТЬ ПОД ВАШ СЕРВИС РАСПОЗНАВАНИЯ ---
-            // const formData = new FormData();
-            // formData.append('image', input.files[0]);
-            //
-            // try {
-            //     const response = await fetch(settings.foodApiUrl, {
-            //         method: 'POST',
-            //         headers: { 'Authorization': `Bearer ${settings.foodApiKey}` },
-            //         body: formData
-            //     });
-            //     const data = await response.json();
-            //     // Здесь вы должны обработать ответ и заполнить поля, например:
-            //     // const foodData = { name: data.results[0].name, calories: data.results[0].calories, ... };
-            //     // selectFood(foodData);
-            // } catch (error) {
-            //     alert('Ошибка при распознавании изображения.');
-            // }
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+
+            try {
+                // Spoonacular требует отправку файла методом POST
+                const response = await fetch(`${settings.foodApiUrl}?apiKey=${settings.foodApiKey}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                   throw new Error(`Ошибка сети: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Проверяем, что Spoonacular что-то нашел
+                if (data.category && data.nutrition && data.nutrition.calories) {
+                    const foodData = {
+                        name: data.category.name,
+                        calories: data.nutrition.calories.value,
+                        protein: data.nutrition.protein.value,
+                        fat: data.nutrition.fat.value,
+                        carbs: data.nutrition.carbs.value
+                    };
+                    selectFood(foodData);
+                    document.getElementById('search-results').innerHTML = `Найдено: ${foodData.name}!`;
+                } else {
+                    document.getElementById('search-results').innerHTML = 'Не удалось распознать еду на фото.';
+                }
+            } catch (error) {
+                console.error('Ошибка при распознавании изображения:', error);
+                document.getElementById('search-results').innerHTML = 'Произошла ошибка при анализе.';
+            } finally {
+                // Очищаем input, чтобы можно было загрузить то же фото еще раз
+                input.value = '';
+            }
         }
 
         function selectFood(data) {
@@ -493,3 +513,4 @@
 </body>
 
 </html>
+
