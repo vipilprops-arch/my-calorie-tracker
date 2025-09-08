@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -18,9 +16,14 @@
         <div style="padding: 15px;">
             <div class="meal-card" style="flex-direction: column; align-items: normal;"><p style="font-weight: 500;">Цели по калориям и БЖУ</p><input type="number" id="goal-calories-input" placeholder="Цель калорий (ккал)"><input type="number" id="goal-carbs-input" placeholder="Цель углеводы (г)"><input type="number" id="goal-protein-input" placeholder="Цель белки (г)"><input type="number" id="goal-fat-input" placeholder="Цель жиры (г)"></div>
             <div class="meal-card" style="flex-direction: column; align-items: normal;"><p style="font-weight: 500;">API Edamam (Поиск по названию)</p><input type="text" id="edamam-id-input" placeholder="Edamam Application ID"><input type="text" id="edamam-key-input" placeholder="Edamam Application Key"></div>
-            <div class="meal-card" style="flex-direction: column; align-items: normal;"><p style="font-weight: 500;">API Clarifai (Распознавание по фото)</p><input type="text" id="clarifai-api-key-input" placeholder="Clarifai PAT ключ"></div>
+            <!-- ИЗМЕНЕННЫЙ БЛОК НАСТРОЕК -->
+            <div class="meal-card" style="flex-direction: column; align-items: normal;">
+                <p style="font-weight: 500;">API Clarifai и Прокси</p>
+                <input type="text" id="clarifai-api-key-input" placeholder="Clarifai PAT ключ">
+                <input type="text" id="proxy-url-input" placeholder="URL вашего HTTPS прокси">
+            </div>
+            <button class="primary" onclick="saveSettings()">Сохранить</button>
         </div>
-        <button class="primary" onclick="saveSettings()" style="width: calc(100% - 30px); margin: 0 15px;">Сохранить</button>
     </div>
     <div class="fab" onclick="openFoodModal(null)">+</div>
     <div class="bottom-nav"><div class="nav-item active" onclick="showPage('diaryPage')"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM8 17H4v-5h4v5zm6 0h-4v-5h4v5zm6 0h-4v-5h4v5zM8 10H4V5h4v5zm6 0h-4V5h4v5zm6 0h-4V5h4v5z"/></svg><div>Дневник</div></div><div class="nav-item" onclick="showPage('statsPage')"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M4 9h4v11H4zM10 9h4v11h-4zM16 9h4v11h-4z"/></svg><div>Статистика</div></div><div class="nav-item" onclick="showPage('settingsPage')"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg><div>Больше</div></div></div>
@@ -31,67 +34,37 @@
         let selectedDate = new Date();
         let calendarDate = new Date();
         let baseNutrients = { calories: 0, protein: 0, fat: 0, carbs: 0 };
-
-        // СПИСОК ПРОКСИ, КОТОРЫЙ МЫ БУДЕМ ПРОВЕРЯТЬ
-        const PROXIES = [
-            'https://cors-anywhere.herokuapp.com/',
-            'https://api.allorigins.win/raw?url='
-        ];
+        document.addEventListener('DOMContentLoaded', () => { loadSettings(); showPage('diaryPage'); changeDate(0); });
         
-        document.addEventListener('DOMContentLoaded', () => {
-            loadSettings();
-            showPage('diaryPage');
-            changeDate(0);
-        });
-
-        async function fetchViaProxy(url, options) {
-            let lastError = null;
-            for (const proxy of PROXIES) {
-                try {
-                    let fetchUrl;
-                    let fetchOptions = {...options};
-                    
-                    if (proxy.includes('allorigins')) {
-                        // Allorigins требует, чтобы URL был частью query string
-                        fetchUrl = proxy + encodeURIComponent(url);
-                        // Для Allorigins не нужны специальные заголовки
-                    } else {
-                        // Cors-anywhere работает как прямой префикс
-                        fetchUrl = proxy + url;
-                    }
-                    
-                    console.log(`Пытаюсь использовать прокси: ${proxy}`);
-                    const response = await fetch(fetchUrl, fetchOptions);
-                    
-                    if (!response.ok) {
-                        if (response.status === 403 && proxy.includes('cors-anywhere')) {
-                           throw new Error(`Прокси cors-anywhere требует активации. Перейдите по его ссылке и нажмите кнопку.`);
-                        }
-                        throw new Error(`Прокси вернул ошибку: ${response.status}`);
-                    }
-                    return await response.json(); // Успех!
-                } catch (error) {
-                    console.error(`Прокси ${proxy} не сработал:`, error);
-                    lastError = error;
-                }
-            }
-            throw lastError; // Если все прокси не сработали
-        }
-
         async function recognizeFoodByImage(input) {
             const settings = loadSettings();
             const PAT = settings.clarifaiApiKey;
+            const proxyUrl = settings.proxyUrl;
+
             if (!PAT) { alert('Ключ API (PAT) от Clarifai не указан в настройках.'); return; }
+            if (!proxyUrl) { alert('URL прокси-сервера не указан в настройках.'); return; }
             if (!input.files[0]) return;
-            document.getElementById('search-results').innerHTML = 'Анализ фото...';
+            
+            document.getElementById('search-results').innerHTML = 'Анализ фото через ваш прокси...';
             const reader = new FileReader();
             reader.onload = async () => {
                 const base64Image = reader.result.split(',')[1];
                 const targetUrl = 'https://api.clarifai.com/v2/models/food-item-recognition/versions/1d5fd481e0cf4826aa72ec3ff049e044/outputs';
                 const raw = JSON.stringify({ "inputs": [{ "data": { "image": { "base64": base64Image } } }] });
                 const requestOptions = { method: 'POST', headers: { 'Accept': 'application/json', 'Authorization': 'Key ' + PAT }, body: raw };
+                
                 try {
-                    const data = await fetchViaProxy(targetUrl, requestOptions);
+                    // Используем прокси, который вы указали, добавив к нему URL Clarifai
+                    const fullProxyUrl = proxyUrl + targetUrl;
+                    const response = await fetch(fullProxyUrl, requestOptions);
+                    
+                    if (!response.ok) {
+                        let errorText = await response.text();
+                        try { errorText = JSON.parse(errorText).status.details || errorText; } catch (e) {}
+                        throw new Error(`Прокси вернул ошибку: ${response.status}. ${errorText}`);
+                    }
+    
+                    const data = await response.json();
                     const concepts = data.outputs[0].data.concepts;
                     if (concepts && concepts.length > 0) {
                         const resultsDiv = document.getElementById('search-results');
@@ -103,7 +76,12 @@
                         }
                         resultsDiv.innerHTML += `<button class="primary" style="background-color: var(--secondary-text-color); margin-top: 10px;" onclick="enterManually()">✍️ Ввести вручную</button>`;
                     } else { document.getElementById('search-results').innerHTML = 'Не удалось распознать еду на фото.'; }
-                } catch (error) { console.error('Ошибка при распознавании:', error); document.getElementById('search-results').innerHTML = `Произошла ошибка: ${error.message}`; } finally { input.value = ''; }
+                } catch (error) {
+                    console.error('Ошибка при распознавании:', error);
+                    document.getElementById('search-results').innerHTML = `Произошла ошибка: ${error.message}`;
+                } finally {
+                    input.value = '';
+                }
             };
             reader.readAsDataURL(input.files[0]);
         }
@@ -122,8 +100,8 @@
         function renderCalendar() { const grid = document.getElementById('calendar-grid'); const display = document.getElementById('month-year-display'); grid.innerHTML = ''; const year = calendarDate.getFullYear(); const month = calendarDate.getMonth(); display.textContent = calendarDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }); const firstDayOfMonth = new Date(year, month, 1); const daysInMonth = new Date(year, month + 1, 0).getDate(); const dayOffset = (firstDayOfMonth.getDay() === 0) ? 6 : firstDayOfMonth.getDay() - 1; for (let i = 0; i < dayOffset; i++) { grid.innerHTML += `<div></div>`; } for (let day = 1; day <= daysInMonth; day++) { const dayEl = document.createElement('div'); dayEl.className = 'day'; dayEl.textContent = day; const currentDayDate = new Date(year, month, day); const dateKey = currentDayDate.toISOString().split('T')[0]; const data = loadDataForDate(dateKey); const settings = loadSettings(); const eaten = (data.food || []).reduce((sum, item) => sum + item.calories, 0); if (eaten >= settings.goalCalories) dayEl.classList.add('completed'); if (currentDayDate.toDateString() === new Date().toDateString()) dayEl.classList.add('today'); if (currentDayDate.toDateString() === selectedDate.toDateString()) dayEl.classList.add('selected'); dayEl.onclick = () => { selectedDate = currentDayDate; changeDate(0); closeCalendarModal(); }; grid.appendChild(dayEl); } }
         function loadDataForDate(dateKey) { return JSON.parse(localStorage.getItem(dateKey) || '{}'); }
         function saveDataForDate(dateKey, data) { localStorage.setItem(dateKey, JSON.stringify(data)); }
-        function saveSettings() { const settings = { goalCalories: document.getElementById('goal-calories-input').value, goalCarbs: document.getElementById('goal-carbs-input').value, goalProtein: document.getElementById('goal-protein-input').value, goalFat: document.getElementById('goal-fat-input').value, edamamId: document.getElementById('edamam-id-input').value, edamamKey: document.getElementById('edamam-key-input').value, clarifaiApiKey: document.getElementById('clarifai-api-key-input').value }; localStorage.setItem('userSettings', JSON.stringify(settings)); alert('Настройки сохранены!'); renderDiary(); showPage('diaryPage'); }
-        function loadSettings() { const settings = JSON.parse(localStorage.getItem('userSettings') || '{}'); const defaults = { goalCalories: 2000, goalCarbs: 250, goalProtein: 150, goalFat: 70, edamamId: '', edamamKey: '', clarifaiApiKey: '' }; const finalSettings = { ...defaults, ...settings }; if(document.getElementById('goal-calories-input')) { document.getElementById('goal-calories-input').value = finalSettings.goalCalories; document.getElementById('goal-carbs-input').value = finalSettings.goalCarbs; document.getElementById('goal-protein-input').value = finalSettings.goalProtein; document.getElementById('goal-fat-input').value = finalSettings.goalFat; document.getElementById('edamam-id-input').value = finalSettings.edamamId; document.getElementById('edamam-key-input').value = finalSettings.edamamKey; document.getElementById('clarifai-api-key-input').value = finalSettings.clarifaiApiKey; } return finalSettings; }
+        function saveSettings() { const settings = { goalCalories: document.getElementById('goal-calories-input').value, goalCarbs: document.getElementById('goal-carbs-input').value, goalProtein: document.getElementById('goal-protein-input').value, goalFat: document.getElementById('goal-fat-input').value, edamamId: document.getElementById('edamam-id-input').value, edamamKey: document.getElementById('edamam-key-input').value, clarifaiApiKey: document.getElementById('clarifai-api-key-input').value, proxyUrl: document.getElementById('proxy-url-input').value }; localStorage.setItem('userSettings', JSON.stringify(settings)); alert('Настройки сохранены!'); renderDiary(); showPage('diaryPage'); }
+        function loadSettings() { const settings = JSON.parse(localStorage.getItem('userSettings') || '{}'); const defaults = { goalCalories: 2000, goalCarbs: 250, goalProtein: 150, goalFat: 70, edamamId: '', edamamKey: '', clarifaiApiKey: '', proxyUrl: 'https://cors-anywhere.herokuapp.com/' }; const finalSettings = { ...defaults, ...settings }; if(document.getElementById('goal-calories-input')) { document.getElementById('goal-calories-input').value = finalSettings.goalCalories; document.getElementById('goal-carbs-input').value = finalSettings.goalCarbs; document.getElementById('goal-protein-input').value = finalSettings.goalProtein; document.getElementById('goal-fat-input').value = finalSettings.goalFat; document.getElementById('edamam-id-input').value = finalSettings.edamamId; document.getElementById('edamam-key-input').value = finalSettings.edamamKey; document.getElementById('clarifai-api-key-input').value = finalSettings.clarifaiApiKey; document.getElementById('proxy-url-input').value = finalSettings.proxyUrl; } return finalSettings; }
         function openFoodModal(type) { if (type) document.getElementById('meal-type-select').value = type; document.getElementById('addFoodModal').style.display = 'flex'; document.getElementById('weight-calculator').style.display = 'none'; document.getElementById('search-results').innerHTML = ''; baseNutrients = { calories: 0, protein: 0, fat: 0, carbs: 0 }; }
         function closeFoodModal() { document.getElementById('addFoodModal').style.display = 'none'; }
         async function translateText(text) { if (!text || !/[a-zA-Z]/.test(text)) return text; try { const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ru`); if (!response.ok) return text; const data = await response.json(); return data.responseData?.translatedText || text; } catch (error) { return text; } }
